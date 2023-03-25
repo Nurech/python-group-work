@@ -6,24 +6,25 @@ import os
 
 class BpmnEditor:
     def __init__(self, window):
-        window.title("BPMN Editor")
+        self.window = window
+        self.window.title("BPMN Editor")
 
         self.diagram_img = None  # The base BPMN diagram
         self.diagram = None  # The base BPMN diagram
         self.icon_list = []  # Icon image files added to the diagram
         self.drag_item = 0  # The icon object currently being dragged
 
-        window.rowconfigure(0, minsize=800, weight=1)
-        window.columnconfigure(1, minsize=800, weight=1)
+        self.window.rowconfigure(0, minsize=800, weight=1)
+        self.window.columnconfigure(1, minsize=800, weight=1)
 
-        # Creating a canvas with scrollbar widget
-        vscrollbar = tk.Scrollbar(window)
+        # Creating a canvas with scrollbars
+        vscrollbar = tk.Scrollbar(self.window)
         vscrollbar.grid(row=0, column=2, sticky=tk.NS)
         # Creating a horizontal scrollbar widget
-        hscrollbar = tk.Scrollbar(window, orient="horizontal")
+        hscrollbar = tk.Scrollbar(self.window, orient="horizontal")
         hscrollbar.grid(row=1, column=1, sticky=tk.EW)
         # Creating a canvas with the scrollbars attached
-        self.canvas = tk.Canvas(window, width=800, height=600, yscrollcommand=vscrollbar.set,
+        self.canvas = tk.Canvas(self.window, width=800, height=600, yscrollcommand=vscrollbar.set,
                                 xscrollcommand=hscrollbar.set)
         self.canvas.grid(row=0, column=1, sticky=tk.NSEW)
         # Configuring the scrollbars to scroll the canvas
@@ -31,13 +32,21 @@ class BpmnEditor:
         hscrollbar.config(command=self.canvas.xview)
 
         # Add buttons to the left side
-        frm_buttons = tk.Frame(window, relief=tk.RAISED, bd=2)
+        self.button_icons = []
+        self.buttons = []
+        self.create_buttons_menu()
+
+        # bind mouse events for dragging and dropping
+        self.canvas.bind("<Button-1>", self.drag_start)
+        self.canvas.bind("<B1-Motion>", self.drag_move)
+
+    def create_buttons_menu(self):
+        """Create the left side menu with buttons."""
+        frm_buttons = tk.Frame(self.window, relief=tk.RAISED, bd=2)
         btn_open = tk.Button(frm_buttons, text="Open", command=self.open_file)
         btn_open.grid(row=0, column=0, sticky=tk.EW, padx=5, pady=5)
         btn_save = tk.Button(frm_buttons, text="Save As...", command=self.save_file)
         btn_save.grid(row=1, column=0, sticky=tk.EW, padx=5, pady=5)
-        self.button_icons = []
-        self.buttons = []
         row = 2
         for filename in os.listdir("assets"):
             original_img = Image.open("assets/" + filename)
@@ -51,13 +60,6 @@ class BpmnEditor:
             self.buttons.append(btn_add_lock)
             row += 1
         frm_buttons.grid(row=0, column=0, sticky=tk.NS)
-
-        # bind mouse events for dragging and dropping
-        self.canvas.bind("<Button-1>", self.drag_start)
-        self.canvas.bind("<B1-Motion>", self.drag_move)
-
-    def create_buttons(self):
-        pass
 
     def open_file(self):
         """Open a file for editing."""
