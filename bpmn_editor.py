@@ -1,13 +1,15 @@
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from PIL import ImageTk, Image, ImageGrab
+import pygetwindow
 import os
 
 
 class BpmnEditor:
     def __init__(self, window):
-        window.title("BPMN Editor")
 
+        self.title = "BPMN Editor"
+        window.title(self.title)
         self.diagram_img = None  # The base BPMN diagram
         self.diagram = None  # The base BPMN diagram
         self.icon_list = []  # Icon image files added to the diagram
@@ -31,10 +33,10 @@ class BpmnEditor:
         hscrollbar.config(command=self.canvas.xview)
 
         # Add buttons to the left side
-        frm_buttons = tk.Frame(window, relief=tk.RAISED, bd=2)
-        btn_open = tk.Button(frm_buttons, text="Open", command=self.open_file)
+        self.frm_buttons = tk.Frame(window, relief=tk.RAISED, bd=2)
+        btn_open = tk.Button(self.frm_buttons, text="Open", command=self.open_file)
         btn_open.grid(row=0, column=0, sticky=tk.EW, padx=5, pady=5)
-        btn_save = tk.Button(frm_buttons, text="Save As...", command=self.save_file)
+        btn_save = tk.Button(self.frm_buttons, text="Save As...", command=self.save_file)
         btn_save.grid(row=1, column=0, sticky=tk.EW, padx=5, pady=5)
         self.button_icons = []
         self.buttons = []
@@ -45,12 +47,12 @@ class BpmnEditor:
             img = ImageTk.PhotoImage(resized_img)
             self.button_icons.append(img)
             btn_add_lock = tk.Button(
-                frm_buttons, text="Add " + filename, image=img, command=lambda fn=filename: self.add_icon(fn)
+                self.frm_buttons, text="Add " + filename, image=img, command=lambda fn=filename: self.add_icon(fn)
             )
             btn_add_lock.grid(row=row, column=0, sticky=tk.EW, padx=5, pady=5)
             self.buttons.append(btn_add_lock)
             row += 1
-        frm_buttons.grid(row=0, column=0, sticky=tk.NS)
+        self.frm_buttons.grid(row=0, column=0, sticky=tk.NS)
 
         # bind mouse events for dragging and dropping
         self.canvas.bind("<Button-1>", self.drag_start)
@@ -67,7 +69,14 @@ class BpmnEditor:
         self.canvas.delete("all")  # reset the canvas
         self.diagram_img = Image.open(filepath)
         self.diagram = ImageTk.PhotoImage(self.diagram_img)
-        # Todo: resize canvas + maybe resize window?
+
+        # TODO handle error jic
+        win = pygetwindow.getWindowsWithTitle(self.title)[0]
+        buttons_frame_width = self.frm_buttons.winfo_width()
+
+        # TODO random +50+100 needed from nowhere, its not scrollbar
+        win.size = (self.diagram_img.width + buttons_frame_width + 50, self.diagram_img.height + 100)
+
         # Configuring the canvas to have a scroll region that matches the image size
         self.canvas.config(scrollregion=(0, 0, self.diagram_img.width, self.diagram_img.height))
         self.canvas.create_image(0, 0, image=self.diagram, anchor="nw")
