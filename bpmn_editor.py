@@ -36,6 +36,17 @@ def save_file():
 def add_lock():
     # load another image for testing
     img = Image.open("images/lock.png")
+    img.thumbnail((50, 50))
+    photo = ImageTk.PhotoImage(img)
+    added_images.append(img)
+    added_photos.append(photo)
+    canvas.create_image(50, 50, image=photo)
+
+
+def add_unlock():
+    # load another image for testing
+    img = Image.open("images/unlock.png")
+    img.thumbnail((50, 50))
     photo = ImageTk.PhotoImage(img)
     added_images.append(img)
     added_photos.append(photo)
@@ -80,9 +91,11 @@ frm_buttons = tk.Frame(window, relief=tk.RAISED, bd=2)
 btn_open = tk.Button(frm_buttons, text="Open", command=open_file)
 btn_save = tk.Button(frm_buttons, text="Save As...", command=save_file)
 btn_add_lock = tk.Button(frm_buttons, text="Add lock", command=add_lock)
+btn_add_unlock = tk.Button(frm_buttons, text="Add unlock", command=add_unlock)
 btn_open.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
 btn_save.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
-btn_add_lock.grid(row=2, column=0, sticky="ew", padx=5)
+btn_add_lock.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
+btn_add_unlock.grid(row=3, column=0, sticky="ew", padx=5, pady=5)
 frm_buttons.grid(row=0, column=0, sticky="ns")
 # bind mouse events for dragging and dropping
 canvas.bind("<Button-1>", drag_start)
