@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import *
 import sys
 from PIL import Image
 
-img = Image.open('diagram.png')
+img = Image.open('images/diagram.png')
 diagram_width, diagram_height = img.size
 print(diagram_width, diagram_height)
 
@@ -17,14 +17,14 @@ class OverlayImage(QWidget):
 
     def initUI(self):
         # Set a background image
-        self.bg_image = QPixmap('diagram.png')
+        self.bg_image = QPixmap('images/diagram.png')
         self.label_bg = QLabel(self)
         self.label_bg.setGeometry(0, 0, diagram_width, diagram_height)
         self.label_bg.setPixmap(self.bg_image)
         self.label_bg.setScaledContents(True)
 
         # Set an overlay image
-        self.overlay_image = QPixmap('lock.png')
+        self.overlay_image = QPixmap('images/lock.png')
         self.label_overlay = QLabel(self)
         self.label_overlay.setGeometry(0, 0, 50, 50)
         self.label_overlay.setPixmap(self.overlay_image)
@@ -49,7 +49,7 @@ class OverlayImage(QWidget):
         painter = QPainter(self.new_image)
         painter.drawPixmap(self.drag_end_x - self.drag_start_x, self.drag_end_y - self.drag_start_y, self.overlay_image)
         painter.end()
-        self.new_image.save('new_image.png')
+        self.new_image.save('images/new_image.png')
 
 
 app = QApplication(sys.argv)
