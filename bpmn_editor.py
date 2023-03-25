@@ -7,10 +7,13 @@ import os
 class BpmnEditor:
     def __init__(self, window):
         self.window = window
-        self.window.title("BPMN Editor")
+        self.window_name = "BPMN Editor"
+        self.window.title(self.window_name)
+        self.window.resizable(0, 0)  # Make the window size fixed (user can not change the window size)
 
         self.diagram_img = None  # The base BPMN diagram
         self.diagram = None  # The base BPMN diagram
+        self.base_obj_nr = 0  # tkinter reference to the diagram
         self.icon_list = []  # Icon image files added to the diagram
         self.drag_item = 0  # The icon object currently being dragged
 
@@ -69,10 +72,11 @@ class BpmnEditor:
         self.canvas.delete("all")  # reset the canvas
         self.diagram_img = Image.open(filepath)
         self.diagram = ImageTk.PhotoImage(self.diagram_img)
-        # Todo: resize canvas + maybe resize window?
-        # Configuring the canvas to have a scroll region that matches the image size
-        self.canvas.config(scrollregion=(0, 0, self.diagram_img.width, self.diagram_img.height))
-        self.canvas.create_image(0, 0, image=self.diagram, anchor="nw")
+        self.canvas.config(
+            scrollregion=(0, 0, self.diagram_img.width, self.diagram_img.height),  # scrollregion might not be necessary
+            width=self.diagram_img.width, height=self.diagram_img.height
+        )
+        self.base_obj_nr = self.canvas.create_image(0, 0, image=self.diagram, anchor="nw")
 
     def save_file(self):
         """Save the file."""
@@ -107,7 +111,7 @@ class BpmnEditor:
     def drag_move(self, event):
         """Drag an object."""
         items = self.canvas.find_withtag("all")  # get all item ids
-        if len(items) > 1:  # Block moving the base image
+        if len(items) > 1 and self.drag_item != self.base_obj_nr:  # Block moving the base image
             self.canvas.coords(self.drag_item, event.x, event.y)
 
 
