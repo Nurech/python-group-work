@@ -7,9 +7,9 @@ import os
 
 class BpmnEditor:
     def __init__(self, window):
-
+        window.title("BPMN Editor")
         self.title = "BPMN Editor"
-        window.title(self.title)
+        self.window = window
         self.diagram_img = None  # The base BPMN diagram
         self.diagram = None  # The base BPMN diagram
         self.icon_list = []  # Icon image files added to the diagram
@@ -43,8 +43,8 @@ class BpmnEditor:
 
     def create_buttons_menu(self):
         """Create the left side menu with buttons."""
-        frm_buttons = tk.Frame(self.window, relief=tk.RAISED, bd=2)
-        btn_open = tk.Button(frm_buttons, text="Open", command=self.open_file)
+        self.frm_buttons = tk.Frame(self.window, relief=tk.RAISED, bd=2)
+        btn_open = tk.Button(self.frm_buttons, text="Open", command=self.open_file)
         btn_open.grid(row=0, column=0, sticky=tk.EW, padx=5, pady=5)
         btn_save = tk.Button(self.frm_buttons, text="Save As...", command=self.save_file)
         btn_save.grid(row=1, column=0, sticky=tk.EW, padx=5, pady=5)
