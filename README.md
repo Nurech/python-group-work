@@ -8,6 +8,7 @@ Libraries:
 
 References:
 * https://docs.python.org/3/library/tkinter.html
+* https://tkinter-docs.readthedocs.io/en/latest/widgets/canvas.html
 * https://pillow.readthedocs.io/en/stable/reference/Image.html
 * https://pillow.readthedocs.io/en/stable/reference/ImageTk.html
 * https://pillow.readthedocs.io/en/stable/reference/ImageGrab.html
@@ -16,6 +17,7 @@ References:
 * https://www.youtube.com/watch?v=Jl1xsH6MR1g&t=254s&ab_channel=Codemy.com
 * https://stackoverflow.com/questions/15839491/how-to-clear-tkinter-canvas
 * https://stackoverflow.com/questions/10865116/tkinter-creating-buttons-in-for-loop-passing-command-arguments
+* https://stackoverflow.com/questions/7142342/get-window-position-size-with-python
 
 
 python -m pip install pysimplegui

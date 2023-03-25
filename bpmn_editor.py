@@ -1,17 +1,19 @@
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from PIL import ImageTk, Image, ImageGrab
-import pygetwindow
 import os
 
 
 class BpmnEditor:
     def __init__(self, window):
-        window.title("BPMN Editor")
-        self.title = "BPMN Editor"
         self.window = window
+        self.window_name = "BPMN Editor"
+        self.window.title(self.window_name)
+        self.window.resizable(0, 0)  # Make the window size fixed (user can not change the window size)
+
         self.diagram_img = None  # The base BPMN diagram
         self.diagram = None  # The base BPMN diagram
+        self.base_obj_nr = 0  # tkinter reference to the diagram
         self.icon_list = []  # Icon image files added to the diagram
         self.drag_item = 0  # The icon object currently being dragged
 
@@ -43,10 +45,10 @@ class BpmnEditor:
 
     def create_buttons_menu(self):
         """Create the left side menu with buttons."""
-        self.frm_buttons = tk.Frame(self.window, relief=tk.RAISED, bd=2)
-        btn_open = tk.Button(self.frm_buttons, text="Open", command=self.open_file)
+        frm_buttons = tk.Frame(self.window, relief=tk.RAISED, bd=2)
+        btn_open = tk.Button(frm_buttons, text="Open", command=self.open_file)
         btn_open.grid(row=0, column=0, sticky=tk.EW, padx=5, pady=5)
-        btn_save = tk.Button(self.frm_buttons, text="Save As...", command=self.save_file)
+        btn_save = tk.Button(frm_buttons, text="Save As...", command=self.save_file)
         btn_save.grid(row=1, column=0, sticky=tk.EW, padx=5, pady=5)
         row = 2
         for filename in os.listdir("assets"):
@@ -55,12 +57,12 @@ class BpmnEditor:
             img = ImageTk.PhotoImage(resized_img)
             self.button_icons.append(img)
             btn_add_lock = tk.Button(
-                self.frm_buttons, text="Add " + filename, image=img, command=lambda fn=filename: self.add_icon(fn)
+                frm_buttons, text="Add " + filename, image=img, command=lambda fn=filename: self.add_icon(fn)
             )
             btn_add_lock.grid(row=row, column=0, sticky=tk.EW, padx=5, pady=5)
             self.buttons.append(btn_add_lock)
             row += 1
-        self.frm_buttons.grid(row=0, column=0, sticky=tk.NS)
+        frm_buttons.grid(row=0, column=0, sticky=tk.NS)
 
     def open_file(self):
         """Open a file for editing."""
@@ -70,17 +72,11 @@ class BpmnEditor:
         self.canvas.delete("all")  # reset the canvas
         self.diagram_img = Image.open(filepath)
         self.diagram = ImageTk.PhotoImage(self.diagram_img)
-
-        # TODO handle error jic
-        win = pygetwindow.getWindowsWithTitle(self.title)[0]
-        buttons_frame_width = self.frm_buttons.winfo_width()
-
-        # TODO random +50+100 needed from nowhere, its not scrollbar
-        win.size = (self.diagram_img.width + buttons_frame_width + 50, self.diagram_img.height + 100)
-
-        # Configuring the canvas to have a scroll region that matches the image size
-        self.canvas.config(scrollregion=(0, 0, self.diagram_img.width, self.diagram_img.height))
-        self.canvas.create_image(0, 0, image=self.diagram, anchor="nw")
+        self.canvas.config(
+            scrollregion=(0, 0, self.diagram_img.width, self.diagram_img.height),  # scrollregion might not be necessary
+            width=self.diagram_img.width, height=self.diagram_img.height
+        )
+        self.base_obj_nr = self.canvas.create_image(0, 0, image=self.diagram, anchor="nw")
 
     def save_file(self):
         """Save the file."""
@@ -115,7 +111,7 @@ class BpmnEditor:
     def drag_move(self, event):
         """Drag an object."""
         items = self.canvas.find_withtag("all")  # get all item ids
-        if len(items) > 1:  # Block moving the base image
+        if len(items) > 1 and self.drag_item != self.base_obj_nr:  # Block moving the base image
             self.canvas.coords(self.drag_item, event.x, event.y)
 
 
