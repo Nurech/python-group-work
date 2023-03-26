@@ -30,6 +30,11 @@ class BpmnEditor:
         self.canvas = tk.Canvas(self.window, width=800, height=600, yscrollcommand=vscrollbar.set,
                                 xscrollcommand=hscrollbar.set)
         self.canvas.grid(row=0, column=1, sticky=tk.NSEW)
+
+        # Drawing stuff
+        self.canvas.old_coords = None
+        self.state = "drag"
+
         # Configuring the scrollbars to scroll the canvas
         vscrollbar.config(command=self.canvas.yview)
         hscrollbar.config(command=self.canvas.xview)
@@ -45,24 +50,32 @@ class BpmnEditor:
 
     def create_buttons_menu(self):
         """Create the left side menu with buttons."""
-        frm_buttons = tk.Frame(self.window, relief=tk.RAISED, bd=2)
-        btn_open = tk.Button(frm_buttons, text="Open", command=self.open_file)
-        btn_open.grid(row=0, column=0, sticky=tk.EW, padx=5, pady=5)
-        btn_save = tk.Button(frm_buttons, text="Save As...", command=self.save_file)
-        btn_save.grid(row=1, column=0, sticky=tk.EW, padx=5, pady=5)
-        row = 2
+        frame = tk.Frame(self.window, relief=tk.RAISED, bd=2)
+
+        self.add_side_bar_button(frame, "Open", "", self.open_file)
+        self.add_side_bar_button(frame, "Save As...", "", self.save_file)
+
         for filename in os.listdir("assets"):
             original_img = Image.open("assets/" + filename)
             resized_img = original_img.resize((35, 35))  # resize image
             img = ImageTk.PhotoImage(resized_img)
             self.button_icons.append(img)
-            btn_add_lock = tk.Button(
-                frm_buttons, text="Add " + filename, image=img, command=lambda fn=filename: self.add_icon(fn)
-            )
-            btn_add_lock.grid(row=row, column=0, sticky=tk.EW, padx=5, pady=5)
-            self.buttons.append(btn_add_lock)
-            row += 1
-        frm_buttons.grid(row=0, column=0, sticky=tk.NS)
+            self.add_side_bar_button(frame, "Add " + filename, img, lambda fn=filename: self.add_icon(fn))
+
+        self.add_side_bar_button(frame, "arrow", "", self.enable_draw_mode)
+        self.add_side_bar_button(frame, "+", "", self.scale_up)
+        self.add_side_bar_button(frame, "-", "", self.scale_down)
+
+        frame.grid(row=0, column=0, sticky=tk.NS)
+
+    def add_side_bar_button(self, frame, name, img, action):
+        # Button with no icon
+        button = tk.Button(frame, text=name, command=action)
+        if img:
+            # Button with icon
+            button = tk.Button(frame, text=name, image=img, command=action)
+        button.grid(row=len(self.buttons) + 1, column=0, sticky=tk.EW, padx=5, pady=5)
+        self.buttons.append(button)
 
     def open_file(self):
         """Open a file for editing."""
@@ -103,16 +116,64 @@ class BpmnEditor:
 
     def drag_start(self, event):
         """Find the object to drag."""
-        closest_items = self.canvas.find_closest(event.x, event.y)
-        if len(closest_items) == 0:
-            return
-        self.drag_item = closest_items[0]
+        print("state is", self.state)
+        if self.state == "drag":
+            closest_items = self.canvas.find_closest(event.x, event.y)
+            if len(closest_items) == 0:
+                return
+            self.drag_item = closest_items[0]
 
     def drag_move(self, event):
         """Drag an object."""
         items = self.canvas.find_withtag("all")  # get all item ids
         if len(items) > 1 and self.drag_item != self.base_obj_nr:  # Block moving the base image
             self.canvas.coords(self.drag_item, event.x, event.y)
+
+    # TODO
+    def scale_down(self):
+        print("scale down all elements")
+
+    # TODO
+    def scale_up(self):
+        print("scale up all elements")
+
+    def enable_draw_mode(self):
+        if self.state != "draw":
+            for button in self.buttons:
+                if button['text'] == 'arrow':
+                    button.config(relief="sunken")
+            self.state = "draw"
+            print("state is", self.state)
+            self.canvas.unbind("<Button-1>")
+            self.canvas.unbind("<B1-Motion>")
+            self.canvas.bind('<ButtonPress-1>', self.draw_line)
+            self.canvas.bind('<ButtonRelease-1>', self.draw_line)
+            self.window.config(cursor="cross")
+        else:
+            self.stop_drawing_mode()
+
+    def draw_line(self, event):
+        if self.state == "draw":
+            self.window.config(cursor="cross")
+            if str(event.type) == 'ButtonPress':
+                self.canvas.old_coords = event.x, event.y
+
+            elif str(event.type) == 'ButtonRelease':
+                x, y = event.x, event.y
+                x1, y1 = self.canvas.old_coords
+                self.canvas.create_line(x, y, x1, y1)
+                self.stop_drawing_mode()
+
+    def stop_drawing_mode(self):
+        self.canvas.bind("<Button-1>", self.drag_start)
+        self.canvas.bind("<B1-Motion>", self.drag_move)
+
+        self.state = "drag"
+        self.window.config(cursor="arrow")
+        self.canvas.old_coords = None
+        for button in self.buttons:
+            if button['text'] == 'arrow':
+                button.config(relief="raised")
 
 
 if __name__ == "__main__":
