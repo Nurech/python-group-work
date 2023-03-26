@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
-from PIL import ImageTk, Image, ImageGrab
+from PIL import ImageTk, Image, ImageGrab, ImageDraw
 import os
 
 
@@ -48,6 +48,9 @@ class BpmnEditor:
         self.canvas.bind("<Button-1>", self.drag_start)
         self.canvas.bind("<B1-Motion>", self.drag_move)
 
+        # cache of actions
+        self.actions = []
+
     def create_buttons_menu(self):
         """Create the left side menu with buttons."""
         frame = tk.Frame(self.window, relief=tk.RAISED, bd=2)
@@ -62,7 +65,14 @@ class BpmnEditor:
             self.button_icons.append(img)
             self.add_side_bar_button(frame, "Add " + filename, img, lambda fn=filename: self.add_icon(fn))
 
-        self.add_side_bar_button(frame, "arrow", "", self.enable_draw_mode)
+        # dashed line here as Image https://stackoverflow.com/a/65893631/15439733 TODO?
+        myimg = Image.new('RGBA', (35, 35))
+        draw = ImageDraw.Draw(myimg)
+        draw.line((0, 14, 35, 14), fill="red", width=3)
+        line_icon = ImageTk.PhotoImage(myimg)
+        line_icon.image = line_icon  # created image needs to exist in mem, don't delete this line
+
+        self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode)
         self.add_side_bar_button(frame, "+", "", self.scale_up)
         self.add_side_bar_button(frame, "-", "", self.scale_down)
 
@@ -137,6 +147,14 @@ class BpmnEditor:
     def scale_up(self):
         print("scale up all elements")
 
+    # TODO
+    def take_action_back(self):
+        print("back")
+
+    # TODO
+    def go_action_forward(self):
+        print("forward")
+
     def enable_draw_mode(self):
         if self.state != "draw":
             for button in self.buttons:
@@ -161,7 +179,8 @@ class BpmnEditor:
             elif str(event.type) == 'ButtonRelease':
                 x, y = event.x, event.y
                 x1, y1 = self.canvas.old_coords
-                self.canvas.create_line(x, y, x1, y1)
+                # To make this dragable use Image.new() instead of create_line TODO?
+                self.canvas.create_line(x, y, x1, y1, dash=(4, 2), width=3, fill='red')
                 self.stop_drawing_mode()
 
     def stop_drawing_mode(self):
