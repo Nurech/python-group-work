@@ -20,24 +20,13 @@ class BpmnEditor:
         self.window.rowconfigure(0, minsize=800, weight=1)
         self.window.columnconfigure(1, minsize=800, weight=1)
 
-        # Creating a canvas with scrollbars
-        vscrollbar = tk.Scrollbar(self.window)
-        vscrollbar.grid(row=0, column=2, sticky=tk.NS)
-        # Creating a horizontal scrollbar widget
-        hscrollbar = tk.Scrollbar(self.window, orient="horizontal")
-        hscrollbar.grid(row=1, column=1, sticky=tk.EW)
-        # Creating a canvas with the scrollbars attached
-        self.canvas = tk.Canvas(self.window, width=800, height=600, yscrollcommand=vscrollbar.set,
-                                xscrollcommand=hscrollbar.set)
+        # Creating a canvas
+        self.canvas = tk.Canvas(self.window, width=800, height=600)
         self.canvas.grid(row=0, column=1, sticky=tk.NSEW)
 
         # Drawing stuff
         self.canvas.old_coords = None
         self.state = "drag"
-
-        # Configuring the scrollbars to scroll the canvas
-        vscrollbar.config(command=self.canvas.yview)
-        hscrollbar.config(command=self.canvas.xview)
 
         # Add buttons to the left side
         self.button_icons = []
@@ -92,14 +81,11 @@ class BpmnEditor:
         filepath = askopenfilename(filetypes=[("PNG Files", "*.png"), ("All Files", "*.*")])
         if not filepath:
             return
-        self.canvas.delete("all")  # reset the canvas
+        self.canvas.delete(tk.ALL)  # reset the canvas
         self.diagram_img = Image.open(filepath)
         self.diagram = ImageTk.PhotoImage(self.diagram_img)
-        self.canvas.config(
-            scrollregion=(0, 0, self.diagram_img.width, self.diagram_img.height),  # scrollregion might not be necessary
-            width=self.diagram_img.width, height=self.diagram_img.height
-        )
-        self.base_obj_nr = self.canvas.create_image(0, 0, image=self.diagram, anchor="nw")
+        self.canvas.config(width=self.diagram_img.width, height=self.diagram_img.height)
+        self.base_obj_nr = self.canvas.create_image(0, 0, image=self.diagram, anchor=tk.NW)
 
     def save_file(self):
         """Save the file."""
@@ -135,7 +121,7 @@ class BpmnEditor:
 
     def drag_move(self, event):
         """Drag an object."""
-        items = self.canvas.find_withtag("all")  # get all item ids
+        items = self.canvas.find_withtag(tk.ALL)  # get all item ids
         if len(items) > 1 and self.drag_item != self.base_obj_nr:  # Block moving the base image
             self.canvas.coords(self.drag_item, event.x, event.y)
 

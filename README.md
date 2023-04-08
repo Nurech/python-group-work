@@ -1,12 +1,27 @@
-# python-group-work
+# BPMN Editor
 
-Here comes text to explain how to use, what program is about etc.
+This project is a computer program that will allow users to open and edit BPMN model image files and edit them.
+Many BPMN language modeling tools allow the editing of the model, but they lack the ability to add custom
+icons or annotations.
 
-Libraries:
+The program includes following features:
+1. GUI editor to load and view image
+2. Add/remove of custom icons
+3. Draw on the canvas
+4. Save the image
+
+Used libraries:
 * tkinter
 * Pillow
 
-References:
+## Troubleshooting
+### Problems saving the image
+The image saving functionality may in some cases include a little more or less of the screen than expected. This is 
+because the application uses screenshotting as the way to save the image and having scaling turn to something other 
+than 100% seems to affect the ability to use the coordinates correctly for the capturing of the image. For the best 
+experience, please turn screen scaling to 100% when using this app.
+
+## References
 * https://docs.python.org/3/library/tkinter.html
 * https://tkinter-docs.readthedocs.io/en/latest/widgets/canvas.html
 * https://pillow.readthedocs.io/en/stable/reference/Image.html
@@ -18,7 +33,3 @@ References:
 * https://stackoverflow.com/questions/15839491/how-to-clear-tkinter-canvas
 * https://stackoverflow.com/questions/10865116/tkinter-creating-buttons-in-for-loop-passing-command-arguments
 * https://stackoverflow.com/questions/7142342/get-window-position-size-with-python
-
-
-python -m pip install pysimplegui
-pyinstaller --onefile main.py
