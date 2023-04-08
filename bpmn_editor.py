@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from PIL import ImageTk, Image, ImageGrab, ImageDraw
 import os
+import math
 
 
 class BpmnEditor:
@@ -16,6 +17,7 @@ class BpmnEditor:
         self.base_obj_nr = 0  # tkinter reference to the diagram
         self.icon_list = []  # Icon image files added to the diagram
         self.drag_item = 0  # The icon object currently being dragged
+        self.anchor = None  # Which side of a line is anchored to the mouse
 
         self.window.rowconfigure(0, minsize=800, weight=1)
         self.window.columnconfigure(1, minsize=800, weight=1)
@@ -26,6 +28,8 @@ class BpmnEditor:
 
         # Drawing stuff
         self.canvas.old_coords = None
+        self.drawn_line_obj_nrs = []
+        self.drawn_line_coordinates = dict()
         self.state = "drag"
 
         # Add buttons to the left side
@@ -36,6 +40,7 @@ class BpmnEditor:
         # bind mouse events for dragging and dropping
         self.canvas.bind("<Button-1>", self.drag_start)
         self.canvas.bind("<B1-Motion>", self.drag_move)
+        self.canvas.bind("<ButtonRelease-1>", self.drag_release)
 
         # cache of actions
         self.actions = []
@@ -44,9 +49,12 @@ class BpmnEditor:
         """Create the left side menu with buttons."""
         frame = tk.Frame(self.window, relief=tk.RAISED, bd=2)
 
+        # Add open base file button
         self.add_side_bar_button(frame, "Open", "", self.open_file)
+        # Add save button
         self.add_side_bar_button(frame, "Save As...", "", self.save_file)
 
+        # Add icon buttons
         for filename in os.listdir("assets"):
             original_img = Image.open("assets/" + filename)
             resized_img = original_img.resize((35, 35))  # resize image
@@ -54,16 +62,17 @@ class BpmnEditor:
             self.button_icons.append(img)
             self.add_side_bar_button(frame, "Add " + filename, img, lambda fn=filename: self.add_icon(fn))
 
-        # dashed line here as Image https://stackoverflow.com/a/65893631/15439733 TODO?
+        # Drawing button
         myimg = Image.new('RGBA', (35, 35))
         draw = ImageDraw.Draw(myimg)
         draw.line((0, 14, 35, 14), fill="red", width=3)
         line_icon = ImageTk.PhotoImage(myimg)
-        line_icon.image = line_icon  # created image needs to exist in mem, don't delete this line
-
+        self.button_icons.append(line_icon)   # created image needs to exist in mem, don't delete this line
         self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode)
-        self.add_side_bar_button(frame, "+", "", self.scale_up)
-        self.add_side_bar_button(frame, "-", "", self.scale_down)
+
+        # todo future stuff
+        #self.add_side_bar_button(frame, "+", "", self.scale_up)
+        #self.add_side_bar_button(frame, "-", "", self.scale_down)
 
         frame.grid(row=0, column=0, sticky=tk.NS)
 
@@ -82,6 +91,8 @@ class BpmnEditor:
         if not filepath:
             return
         self.canvas.delete(tk.ALL)  # reset the canvas
+        self.drawn_line_obj_nrs = []
+        self.drawn_line_coordinates = dict()
         self.diagram_img = Image.open(filepath)
         self.diagram = ImageTk.PhotoImage(self.diagram_img)
         self.canvas.config(width=self.diagram_img.width, height=self.diagram_img.height)
@@ -119,29 +130,42 @@ class BpmnEditor:
                 return
             self.drag_item = closest_items[0]
 
+    @staticmethod
+    def calculate_dist(c1, c2):
+        return math.sqrt(((c1[0] - c2[0]) ** 2) + ((c1[1] - c2[1]) ** 2))
+
     def drag_move(self, event):
         """Drag an object."""
-        items = self.canvas.find_withtag(tk.ALL)  # get all item ids
-        if len(items) > 1 and self.drag_item != self.base_obj_nr:  # Block moving the base image
+        if self.drag_item == self.base_obj_nr:
+            return
+        if self.drag_item in self.drawn_line_obj_nrs:
+            if self.anchor is None:
+                coords = self.drawn_line_coordinates[self.drag_item]
+                d1 = self.calculate_dist([event.x, event.y], [coords[0], coords[1]])
+                d2 = self.calculate_dist([event.x, event.y], [coords[2], coords[3]])
+                if d1 > d2:
+                    self.anchor = "start"
+                else:
+                    self.anchor = "end"
+            if self.anchor == "start":
+                coords = self.drawn_line_coordinates[self.drag_item]
+                self.canvas.coords(self.drag_item, coords[0], coords[1], event.x, event.y)
+                self.drawn_line_coordinates[self.drag_item] = [coords[0], coords[1], event.x, event.y]
+            elif self.anchor == "end":
+                coords = self.drawn_line_coordinates[self.drag_item]
+                self.canvas.coords(self.drag_item, event.x, event.y, coords[2], coords[3])
+                self.drawn_line_coordinates[self.drag_item] = [event.x, event.y, coords[2], coords[3]]
+        else:
             self.canvas.coords(self.drag_item, event.x, event.y)
 
-    # TODO
-    def scale_down(self):
-        print("scale down all elements")
-
-    # TODO
-    def scale_up(self):
-        print("scale up all elements")
-
-    # TODO
-    def take_action_back(self):
-        print("back")
-
-    # TODO
-    def go_action_forward(self):
-        print("forward")
+    def drag_release(self, event):
+        self.anchor = None
 
     def enable_draw_mode(self):
+        if not self.diagram:  # block while no base image opened
+            print("Open base image before drawing")
+            return
+
         if self.state != "draw":
             for button in self.buttons:
                 if button['text'] == 'arrow':
@@ -159,19 +183,20 @@ class BpmnEditor:
     def draw_line(self, event):
         if self.state == "draw":
             self.window.config(cursor="cross")
-            if str(event.type) == 'ButtonPress':
+            if event.type == tk.EventType.ButtonPress:
                 self.canvas.old_coords = event.x, event.y
-
-            elif str(event.type) == 'ButtonRelease':
+            elif event.type == tk.EventType.ButtonRelease:
                 x, y = event.x, event.y
                 x1, y1 = self.canvas.old_coords
-                # To make this dragable use Image.new() instead of create_line TODO?
-                self.canvas.create_line(x, y, x1, y1, dash=(4, 2), width=3, fill='red')
+                obj_nr = self.canvas.create_line(x, y, x1, y1, dash=(4, 2), width=3, fill='red')
+                self.drawn_line_obj_nrs.append(obj_nr)
+                self.drawn_line_coordinates[obj_nr] = [x, y, x1, y1]
                 self.stop_drawing_mode()
 
     def stop_drawing_mode(self):
         self.canvas.bind("<Button-1>", self.drag_start)
         self.canvas.bind("<B1-Motion>", self.drag_move)
+        self.canvas.bind("<ButtonRelease-1>", self.drag_release)
 
         self.state = "drag"
         self.window.config(cursor="arrow")
@@ -179,6 +204,22 @@ class BpmnEditor:
         for button in self.buttons:
             if button['text'] == 'arrow':
                 button.config(relief="raised")
+
+    # TODO
+    def scale_down(self):
+        print("scale down all elements")
+
+    # TODO
+    def scale_up(self):
+        print("scale up all elements")
+
+    # TODO
+    def take_action_back(self):
+        print("back")
+
+    # TODO
+    def go_action_forward(self):
+        print("forward")
 
 
 if __name__ == "__main__":
