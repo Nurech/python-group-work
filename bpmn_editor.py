@@ -38,9 +38,7 @@ class BpmnEditor:
         self.create_buttons_menu()
 
         # bind mouse events for dragging and dropping
-        self.canvas.bind("<Button-1>", self.drag_start)
-        self.canvas.bind("<B1-Motion>", self.drag_move)
-        self.canvas.bind("<ButtonRelease-1>", self.drag_release)
+        self.default_mode()
 
         # cache of actions
         self.actions = []
@@ -69,6 +67,9 @@ class BpmnEditor:
         line_icon = ImageTk.PhotoImage(myimg)
         self.button_icons.append(line_icon)   # created image needs to exist in mem, don't delete this line
         self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode)
+
+        # Eraser
+        self.add_side_bar_button(frame, "Eraser", "", self.enable_erase_mode)  # todo  add icon
 
         # todo future stuff
         #self.add_side_bar_button(frame, "+", "", self.scale_up)
@@ -174,11 +175,12 @@ class BpmnEditor:
             print("state is", self.state)
             self.canvas.unbind("<Button-1>")
             self.canvas.unbind("<B1-Motion>")
+            self.canvas.unbind("<ButtonRelease-1>")
             self.canvas.bind('<ButtonPress-1>', self.draw_line)
             self.canvas.bind('<ButtonRelease-1>', self.draw_line)
             self.window.config(cursor="cross")
         else:
-            self.stop_drawing_mode()
+            self.default_mode()
 
     def draw_line(self, event):
         if self.state == "draw":
@@ -191,19 +193,49 @@ class BpmnEditor:
                 obj_nr = self.canvas.create_line(x, y, x1, y1, dash=(4, 2), width=3, fill='red')
                 self.drawn_line_obj_nrs.append(obj_nr)
                 self.drawn_line_coordinates[obj_nr] = [x, y, x1, y1]
-                self.stop_drawing_mode()
+                self.default_mode()
 
-    def stop_drawing_mode(self):
+    def default_mode(self):
+        self.canvas.unbind("<Button-1>")
+        self.canvas.unbind("<ButtonPress-1>")
+        self.canvas.unbind("<B1-Motion>")
+        self.canvas.unbind("<ButtonRelease-1>")
         self.canvas.bind("<Button-1>", self.drag_start)
         self.canvas.bind("<B1-Motion>", self.drag_move)
         self.canvas.bind("<ButtonRelease-1>", self.drag_release)
-
         self.state = "drag"
         self.window.config(cursor="arrow")
         self.canvas.old_coords = None
         for button in self.buttons:
-            if button['text'] == 'arrow':
-                button.config(relief="raised")
+            button.config(relief="raised")
+
+    def enable_erase_mode(self):
+        if not self.diagram:  # block while no base image opened
+            print("Open base image before erasing")
+            return
+
+        if self.state != "erase":
+            for button in self.buttons:
+                if button['text'] == 'Eraser':
+                    button.config(relief="sunken")
+            self.state = "erase"
+            self.window.config(cursor="X_cursor")
+            print("state is", self.state)
+            self.canvas.unbind("<Button-1>")
+            self.canvas.unbind("<B1-Motion>")
+            self.canvas.unbind("<ButtonRelease-1>")
+            self.canvas.bind('<ButtonPress-1>', self.erase_element)
+        else:
+            self.default_mode()
+
+    def erase_element(self, event):
+        if self.state == "erase":
+            closest_item = self.canvas.find_closest(event.x, event.y)[0]
+            if self.base_obj_nr != closest_item:
+                self.canvas.delete(closest_item)
+                self.default_mode()
+            else:
+                print("cannot delete the base image")
 
     # TODO
     def scale_down(self):
