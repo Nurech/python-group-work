@@ -1,5 +1,7 @@
 # BPMN Editor
 
+![img.png](img.png)
+
 This project is a computer program that will allow users to open and edit BPMN model image files and edit them.
 Many BPMN language modeling tools allow the editing of the model, but they lack the ability to add custom
 icons or annotations.
@@ -33,3 +35,10 @@ experience, please turn screen scaling to 100% when using this app.
 * https://stackoverflow.com/questions/15839491/how-to-clear-tkinter-canvas
 * https://stackoverflow.com/questions/10865116/tkinter-creating-buttons-in-for-loop-passing-command-arguments
 * https://stackoverflow.com/questions/7142342/get-window-position-size-with-python
+
+## Authors
+Group B, Karl Tamberg and Joosep Parts
+
+## Source code
+
+https://github.com/Nurech/python-group-work

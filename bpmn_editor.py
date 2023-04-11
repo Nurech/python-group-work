@@ -68,12 +68,15 @@ class BpmnEditor:
         self.button_icons.append(line_icon)   # created image needs to exist in mem, don't delete this line
         self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode)
 
-        # Eraser
-        self.add_side_bar_button(frame, "Eraser", "", self.enable_erase_mode)  # todo  add icon
+        # Eraser button
+        eraser_img = Image.new('RGBA', (35, 35), (255, 255, 255, 0))
+        eraser_draw = ImageDraw.Draw(eraser_img)
+        eraser_draw.line([10, 10, 25, 25], fill="black", width=3)
+        eraser_draw.line([25, 10, 10, 25], fill="black", width=3)
+        eraser_icon = ImageTk.PhotoImage(eraser_img)
+        self.button_icons.append(eraser_icon)  # created image needs to exist in mem, don't delete this line
+        self.add_side_bar_button(frame, "Eraser", eraser_icon, self.enable_erase_mode)
 
-        # todo future stuff
-        #self.add_side_bar_button(frame, "+", "", self.scale_up)
-        #self.add_side_bar_button(frame, "-", "", self.scale_down)
 
         frame.grid(row=0, column=0, sticky=tk.NS)
 
@@ -236,23 +239,6 @@ class BpmnEditor:
                 self.default_mode()
             else:
                 print("cannot delete the base image")
-
-    # TODO
-    def scale_down(self):
-        print("scale down all elements")
-
-    # TODO
-    def scale_up(self):
-        print("scale up all elements")
-
-    # TODO
-    def take_action_back(self):
-        print("back")
-
-    # TODO
-    def go_action_forward(self):
-        print("forward")
-
 
 if __name__ == "__main__":
     root = tk.Tk()
