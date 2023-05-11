@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from PIL import ImageTk, Image, ImageGrab, ImageDraw
 import os
@@ -19,11 +20,11 @@ class BpmnEditor:
         self.drag_item = 0  # The icon object currently being dragged
         self.anchor = None  # Which side of a line is anchored to the mouse
 
-        self.window.rowconfigure(0, minsize=800, weight=1)
-        self.window.columnconfigure(1, minsize=800, weight=1)
+        self.window.rowconfigure(0, minsize=650, weight=1)
+        self.window.columnconfigure(1, minsize=650, weight=1)
 
         # Creating a canvas
-        self.canvas = tk.Canvas(self.window, width=800, height=600)
+        self.canvas = tk.Canvas(self.window, width=650, height=650)
         self.canvas.grid(row=0, column=1, sticky=tk.NSEW)
 
         # Drawing stuff
@@ -45,49 +46,59 @@ class BpmnEditor:
 
     def create_buttons_menu(self):
         """Create the left side menu with buttons."""
-        frame = tk.Frame(self.window, relief=tk.RAISED, bd=2)
+        frame = tk.Frame(self.window, highlightbackground="#a3a3a3", highlightthickness=5)
+        count = 1
 
         # Add open base file button
-        self.add_side_bar_button(frame, "Open", "", self.open_file)
+        count = self.add_side_bar_button(frame, "Open", "", self.open_file, count)
         # Add save button
-        self.add_side_bar_button(frame, "Save As...", "", self.save_file)
+        count = self.add_side_bar_button(frame, "Save As...", "", self.save_file, count)
 
         # Add icon buttons
-        for filename in os.listdir("assets"):
-            original_img = Image.open("assets/" + filename)
+        count = self.add_label(count, frame, "Icons")
+        for filename in os.listdir("assets/button_icons"):
+            original_img = Image.open("assets/button_icons/" + filename)
             resized_img = original_img.resize((35, 35))  # resize image
             img = ImageTk.PhotoImage(resized_img)
             self.button_icons.append(img)
-            self.add_side_bar_button(frame, "Add " + filename, img, lambda fn=filename: self.add_icon(fn))
+            count = self.add_side_bar_button(frame, "Add " + filename, img, lambda fn=filename: self.add_icon(fn), count)
 
         # Drawing button
+        count = self.add_label(count, frame, "Draw")
         myimg = Image.new('RGBA', (35, 35))
         draw = ImageDraw.Draw(myimg)
         draw.line((0, 14, 35, 14), fill="red", width=3)
         line_icon = ImageTk.PhotoImage(myimg)
         self.button_icons.append(line_icon)   # created image needs to exist in mem, don't delete this line
-        self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode)
+        count = self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode, count)
 
         # Eraser button
+        count = self.add_label(count, frame, "Erase")
         eraser_img = Image.new('RGBA', (35, 35), (255, 255, 255, 0))
         eraser_draw = ImageDraw.Draw(eraser_img)
         eraser_draw.line([10, 10, 25, 25], fill="black", width=3)
         eraser_draw.line([25, 10, 10, 25], fill="black", width=3)
         eraser_icon = ImageTk.PhotoImage(eraser_img)
         self.button_icons.append(eraser_icon)  # created image needs to exist in mem, don't delete this line
-        self.add_side_bar_button(frame, "Eraser", eraser_icon, self.enable_erase_mode)
-
+        count = self.add_side_bar_button(frame, "Eraser", eraser_icon, self.enable_erase_mode, count)
 
         frame.grid(row=0, column=0, sticky=tk.NS)
 
-    def add_side_bar_button(self, frame, name, img, action):
-        # Button with no icon
-        button = tk.Button(frame, text=name, command=action)
+    def add_label(self, count, frame, text):
+        label = tk.Label(frame, text=text)
+        label.grid(row=count, column=0, sticky=tk.EW, padx=5, pady=(5, 0))
+        return count + 1
+
+    def add_side_bar_button(self, frame, name, img, action, count):
         if img:
             # Button with icon
-            button = tk.Button(frame, text=name, image=img, command=action)
-        button.grid(row=len(self.buttons) + 1, column=0, sticky=tk.EW, padx=5, pady=5)
+            button = ttk.Button(frame, text=name, image=img, command=action)
+        else:
+            # Button with no icon
+            button = ttk.Button(frame, text=name, command=action)
+        button.grid(row=count, column=0, sticky=tk.EW, padx=5, pady=5)
         self.buttons.append(button)
+        return count + 1
 
     def open_file(self):
         """Open a file for editing."""
@@ -119,7 +130,7 @@ class BpmnEditor:
         if not self.diagram:  # block while no base image opened
             print("Open base image before adding icon")
             return
-        img = Image.open("assets/" + icon_name)
+        img = Image.open("assets/button_icons/" + icon_name)
         img.thumbnail((40, 40))
         photo = ImageTk.PhotoImage(img)
         self.icon_list.append(photo)
@@ -171,9 +182,6 @@ class BpmnEditor:
             return
 
         if self.state != "draw":
-            for button in self.buttons:
-                if button['text'] == 'arrow':
-                    button.config(relief="sunken")
             self.state = "draw"
             print("state is", self.state)
             self.canvas.unbind("<Button-1>")
@@ -209,8 +217,6 @@ class BpmnEditor:
         self.state = "drag"
         self.window.config(cursor="arrow")
         self.canvas.old_coords = None
-        for button in self.buttons:
-            button.config(relief="raised")
 
     def enable_erase_mode(self):
         if not self.diagram:  # block while no base image opened
@@ -218,9 +224,6 @@ class BpmnEditor:
             return
 
         if self.state != "erase":
-            for button in self.buttons:
-                if button['text'] == 'Eraser':
-                    button.config(relief="sunken")
             self.state = "erase"
             self.window.config(cursor="X_cursor")
             print("state is", self.state)
@@ -239,6 +242,7 @@ class BpmnEditor:
                 self.default_mode()
             else:
                 print("cannot delete the base image")
+
 
 if __name__ == "__main__":
     root = tk.Tk()
