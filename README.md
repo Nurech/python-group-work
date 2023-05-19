@@ -2,6 +2,9 @@
 
 ![img.png](img.png)
 
+UPDATES: 19.05.2023
+![img_1.png](img_1.png)
+
 This project is a computer program that will allow users to open and edit BPMN model image files and edit them.
 Many BPMN language modeling tools allow the editing of the model, but they lack the ability to add custom
 icons or annotations.
