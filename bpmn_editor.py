@@ -50,7 +50,6 @@ class BpmnEditor:
     def add_text_dialog(self):
         TextBoxDialog(self)
 
-
     def create_buttons_menu(self):
         """Create the left side menu with buttons."""
         frame = tk.Frame(self.window, highlightbackground="#a3a3a3", highlightthickness=5)
@@ -186,7 +185,29 @@ class BpmnEditor:
                 self.canvas.coords(self.drag_item, event.x, event.y, coords[2], coords[3])
                 self.drawn_line_coordinates[self.drag_item] = [event.x, event.y, coords[2], coords[3]]
         else:
-            self.canvas.coords(self.drag_item, event.x, event.y)
+            # This will try to snap the dragged item to the closest icon
+            snap_threshold = 30
+            drag_item_pos = self.canvas.coords(self.drag_item)
+            closest_icon = None
+            closest_icon_distance = None
+
+            for item in self.canvas.find_all():
+                if item != self.drag_item and item not in self.drawn_line_obj_nrs:
+                    item_pos = self.canvas.coords(item)
+                    distance = math.sqrt((item_pos[0] - drag_item_pos[0]) ** 2 + (item_pos[1] - drag_item_pos[1]) ** 2)
+
+                    if closest_icon_distance is None or distance < closest_icon_distance:
+                        closest_icon_distance = distance
+                        closest_icon = item
+
+            if closest_icon is not None and closest_icon_distance <= snap_threshold and not self.snapped:
+                closest_icon_pos = self.canvas.coords(closest_icon)
+                offset = self.canvas.bbox(self.drag_item)[2] - 15 - self.canvas.bbox(self.drag_item)[0]
+                self.canvas.coords(self.drag_item, closest_icon_pos[0] + offset, closest_icon_pos[1])
+                self.snapped = True
+            else:
+                self.canvas.coords(self.drag_item, event.x, event.y)
+                self.snapped = False
 
     def drag_release(self, event):
         self.anchor = None
