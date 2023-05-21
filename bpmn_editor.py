@@ -5,11 +5,13 @@ from PIL import ImageTk, Image, ImageGrab, ImageDraw
 import os
 import math
 import tooltip
+from textbox import TextBoxDialog
 
 
 class BpmnEditor:
-    def __init__(self, window):
-        self.window = window
+    def __init__(self, master=None):
+        self.master = master if master else tk.Tk()
+        self.window = self.master
         self.window_name = "BPMN Editor"
         self.window.title(self.window_name)
         self.window.resizable(0, 0)  # Make the window size fixed (user can not change the window size)
@@ -45,10 +47,20 @@ class BpmnEditor:
         # cache of actions
         self.actions = []
 
+    def add_text_dialog(self):
+        TextBoxDialog(self)
+
+
     def create_buttons_menu(self):
         """Create the left side menu with buttons."""
         frame = tk.Frame(self.window, highlightbackground="#a3a3a3", highlightthickness=5)
         count = 1
+
+        # Add Text button
+        count = self.add_label(count, frame, "Text")
+        count = self.add_side_bar_button(frame, "Add Text", None, self.add_text_dialog, count, "Add custom text to the diagram")
+
+        frame.grid(row=0, column=0, sticky=tk.NS)
 
         # Add open base file button
         count = self.add_side_bar_button(frame, "Open", "", self.open_file, count, "Open a BPMN diagram (use *.png images)")
@@ -62,7 +74,8 @@ class BpmnEditor:
             resized_img = original_img.resize((35, 35))  # resize image
             img = ImageTk.PhotoImage(resized_img)
             self.button_icons.append(img)
-            count = self.add_side_bar_button(frame, "Add " + filename, img, lambda fn=filename: self.add_icon(fn), count, "Add " + filename + " to the diagram")
+            count = self.add_side_bar_button(frame, "Add " + filename, img, lambda fn=filename: self.add_icon(fn), count,
+                                             "Add " + filename + " to the diagram")
 
         # Drawing button
         count = self.add_label(count, frame, "Draw")
@@ -70,7 +83,7 @@ class BpmnEditor:
         draw = ImageDraw.Draw(myimg)
         draw.line((0, 14, 35, 14), fill="red", width=3)
         line_icon = ImageTk.PhotoImage(myimg)
-        self.button_icons.append(line_icon)   # created image needs to exist in mem, don't delete this line
+        self.button_icons.append(line_icon)  # created image needs to exist in mem, don't delete this line
         count = self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode, count, "Draw a line")
 
         # Eraser button
@@ -101,7 +114,6 @@ class BpmnEditor:
         tooltip.createToolTip(button, tooltip_text)  # add tooltip
         self.buttons.append(button)
         return count + 1
-
 
     def open_file(self):
         """Open a file for editing."""
@@ -249,5 +261,5 @@ class BpmnEditor:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    BpmnEditor(root)
+    editor = BpmnEditor(root)
     root.mainloop()
