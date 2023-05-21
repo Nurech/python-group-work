@@ -4,6 +4,7 @@ from tkinter.filedialog import askopenfilename, asksaveasfilename
 from PIL import ImageTk, Image, ImageGrab, ImageDraw
 import os
 import math
+import tooltip
 
 
 class BpmnEditor:
@@ -50,9 +51,9 @@ class BpmnEditor:
         count = 1
 
         # Add open base file button
-        count = self.add_side_bar_button(frame, "Open", "", self.open_file, count)
+        count = self.add_side_bar_button(frame, "Open", "", self.open_file, count, "Open a BPMN diagram (use *.png images)")
         # Add save button
-        count = self.add_side_bar_button(frame, "Save As...", "", self.save_file, count)
+        count = self.add_side_bar_button(frame, "Save As...", "", self.save_file, count, "Save the BPMN diagram")
 
         # Add icon buttons
         count = self.add_label(count, frame, "Icons")
@@ -61,7 +62,7 @@ class BpmnEditor:
             resized_img = original_img.resize((35, 35))  # resize image
             img = ImageTk.PhotoImage(resized_img)
             self.button_icons.append(img)
-            count = self.add_side_bar_button(frame, "Add " + filename, img, lambda fn=filename: self.add_icon(fn), count)
+            count = self.add_side_bar_button(frame, "Add " + filename, img, lambda fn=filename: self.add_icon(fn), count, "Add " + filename + " to the diagram")
 
         # Drawing button
         count = self.add_label(count, frame, "Draw")
@@ -70,7 +71,7 @@ class BpmnEditor:
         draw.line((0, 14, 35, 14), fill="red", width=3)
         line_icon = ImageTk.PhotoImage(myimg)
         self.button_icons.append(line_icon)   # created image needs to exist in mem, don't delete this line
-        count = self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode, count)
+        count = self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode, count, "Draw a line")
 
         # Eraser button
         count = self.add_label(count, frame, "Erase")
@@ -80,7 +81,7 @@ class BpmnEditor:
         eraser_draw.line([25, 10, 10, 25], fill="black", width=3)
         eraser_icon = ImageTk.PhotoImage(eraser_img)
         self.button_icons.append(eraser_icon)  # created image needs to exist in mem, don't delete this line
-        count = self.add_side_bar_button(frame, "Eraser", eraser_icon, self.enable_erase_mode, count)
+        count = self.add_side_bar_button(frame, "Eraser", eraser_icon, self.enable_erase_mode, count, "Erase a line")
 
         frame.grid(row=0, column=0, sticky=tk.NS)
 
@@ -89,7 +90,7 @@ class BpmnEditor:
         label.grid(row=count, column=0, sticky=tk.EW, padx=5, pady=(5, 0))
         return count + 1
 
-    def add_side_bar_button(self, frame, name, img, action, count):
+    def add_side_bar_button(self, frame, name, img, action, count, tooltip_text):
         if img:
             # Button with icon
             button = ttk.Button(frame, text=name, image=img, command=action)
@@ -97,8 +98,10 @@ class BpmnEditor:
             # Button with no icon
             button = ttk.Button(frame, text=name, command=action)
         button.grid(row=count, column=0, sticky=tk.EW, padx=5, pady=5)
+        tooltip.createToolTip(button, tooltip_text)  # add tooltip
         self.buttons.append(button)
         return count + 1
+
 
     def open_file(self):
         """Open a file for editing."""
