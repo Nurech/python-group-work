@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 
+
 # This adds a text box to the canvas
 class TextBoxDialog:
     def __init__(self, editor):
@@ -37,7 +38,7 @@ class TextBoxDialog:
     def cancel(self):
         self.dialog.destroy()
 
- # This is the function that draws the text box
+    # This is the function that draws the text box
     def draw_text_image(self, text):
         font = ImageFont.truetype("arial.ttf", 14)
         lines = text.split("\n")
@@ -59,7 +60,6 @@ class TextBoxDialog:
         for i in range(5, img.size[1] - 5, 10):
             draw.line([(5, i), (5, i+5)], fill="red", width=2)
             draw.line([(img.size[0] - 5, i), (img.size[0] - 5, i+5)], fill="red", width=2)
-
 
         current_height = 10
         for line in lines:

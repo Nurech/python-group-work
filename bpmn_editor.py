@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
-from PIL import ImageTk, Image, ImageGrab, ImageDraw
+from PIL import ImageTk, Image, ImageGrab
 import os
 import math
 import tooltip
@@ -48,18 +48,15 @@ class BpmnEditor:
         self.actions = []
 
     def add_text_dialog(self):
+        if not self.diagram:  # block while no base image opened
+            print("Open base image before adding text")
+            return
         TextBoxDialog(self)
 
     def create_buttons_menu(self):
         """Create the left side menu with buttons."""
         frame = tk.Frame(self.window, highlightbackground="#a3a3a3", highlightthickness=5)
         count = 1
-
-        # Add Text button
-        count = self.add_label(count, frame, "Text")
-        count = self.add_side_bar_button(frame, "Add Text", None, self.add_text_dialog, count, "Add custom text to the diagram")
-
-        frame.grid(row=0, column=0, sticky=tk.NS)
 
         # Add open base file button
         count = self.add_side_bar_button(frame, "Open", "", self.open_file, count, "Open a BPMN diagram (use *.png images)")
@@ -78,22 +75,27 @@ class BpmnEditor:
 
         # Drawing button
         count = self.add_label(count, frame, "Draw")
-        myimg = Image.new('RGBA', (35, 35))
-        draw = ImageDraw.Draw(myimg)
-        draw.line((0, 14, 35, 14), fill="red", width=3)
-        line_icon = ImageTk.PhotoImage(myimg)
-        self.button_icons.append(line_icon)  # created image needs to exist in mem, don't delete this line
+        line_img = Image.open("assets/line.png")
+        resized_line_img = line_img.resize((30, 30))  # resize image
+        line_icon = ImageTk.PhotoImage(resized_line_img)
+        self.button_icons.append(line_icon)
         count = self.add_side_bar_button(frame, "arrow", line_icon, self.enable_draw_mode, count, "Draw a line")
+
+        # Add Text button
+        count = self.add_label(count, frame, "Text")
+        abc_img = Image.open("assets/abc.png")
+        resized_abc_img = abc_img.resize((30, 30))  # resize image
+        abc_icon = ImageTk.PhotoImage(resized_abc_img)
+        self.button_icons.append(abc_icon)
+        count = self.add_side_bar_button(frame, "Add Text", abc_icon, self.add_text_dialog, count, "Add custom text to the diagram")
 
         # Eraser button
         count = self.add_label(count, frame, "Erase")
-        eraser_img = Image.new('RGBA', (35, 35), (255, 255, 255, 0))
-        eraser_draw = ImageDraw.Draw(eraser_img)
-        eraser_draw.line([10, 10, 25, 25], fill="black", width=3)
-        eraser_draw.line([25, 10, 10, 25], fill="black", width=3)
-        eraser_icon = ImageTk.PhotoImage(eraser_img)
-        self.button_icons.append(eraser_icon)  # created image needs to exist in mem, don't delete this line
-        count = self.add_side_bar_button(frame, "Eraser", eraser_icon, self.enable_erase_mode, count, "Erase a line")
+        eraser_img = Image.open("assets/erase.png")
+        resized_eraser_img = eraser_img.resize((30, 30))  # resize image
+        eraser_icon = ImageTk.PhotoImage(resized_eraser_img)
+        self.button_icons.append(eraser_icon)
+        count = self.add_side_bar_button(frame, "Eraser", eraser_icon, self.enable_erase_mode, count, "Erase objects")
 
         frame.grid(row=0, column=0, sticky=tk.NS)
 

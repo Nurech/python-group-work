@@ -13,7 +13,8 @@ The program includes following features:
 1. GUI editor to load and view image
 2. Add/remove of custom icons
 3. Draw on the canvas
-4. Save the image
+4. Write on the canvas
+5. Save the image
 
 Used libraries:
 * tkinter
@@ -38,6 +39,12 @@ experience, please turn screen scaling to 100% when using this app.
 * https://stackoverflow.com/questions/15839491/how-to-clear-tkinter-canvas
 * https://stackoverflow.com/questions/10865116/tkinter-creating-buttons-in-for-loop-passing-command-arguments
 * https://stackoverflow.com/questions/7142342/get-window-position-size-with-python
+* https://stackoverflow.com/questions/3221956/how-do-i-display-tooltips-in-tkinter
+
+## Icons
+* Erase icon: https://icons8.com/icon/98488/erase
+* Text icon: https://icons8.com/icon/101035/abc
+* Draw icon: https://icons8.com/icon/120152/dashed-line
 
 ## Authors
 Group B, Karl Tamberg and Joosep Parts
